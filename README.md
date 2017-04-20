@@ -19,3 +19,8 @@ This is then multiplied by 2*PI to get a direction angle in radians
 Everything is inside the browser. Next I will try to put the
 GA and the NN in a separate process and communicate via websockets.
 If it isn't too slow.
+
+April 18, 2017 Broke out system into red and blue teams. Each
+team can have different size hidden layers... Not exactly what
+I want. But it is a start.
+

@@ -1,44 +1,32 @@
-var Team = function(color,num_rovers,num_inputs,num_hidden,num_outputs) {
-    this.color = color;
-    this.num_rovers = num_rovers;
-    this.num_inputs = num_inputs;
-    this.num_hidden = num_hidden;
-    this.num_outputs = num_outputs;
-    this.genomes = [];
-    this.brains = [];
-    this.rovers = [];
-    //return this;
-} //end of function
-
-
-function reset_rover_positions(team) {
+function reset_rover_positions() {
    for(var nn=0; nn <num_rovers;nn++) {
-         team.rovers[nn].reset_position();
+         rovers[nn].reset_position();
    } //end of loop
 }
 
-function update_rovers(team) {
-   for(var i=0; i <team.num_rovers;i++) {
-       team.rovers[i].state = team.rovers[i].get_sensor_data();
-       team.rovers[i].angle = team.brains[i].think(team.rovers[i].state);
-       team.rovers[i].move();
-       team.genomes[i].reward = team.rovers[i].get_reward(team.rovers);
-       team.rovers[i].draw(team.color);
+function update_rovers(rovers) {
+   for(var i=0; i <num_rovers;i++) {
+       rovers[i].get_sensor_data();
+       rovers[i].think();
+       rovers[i].move();
+       rovers[i].get_reward();
+       rovers[i].draw();
    }
 }
  
-function Rover(id) {
+function Rover(color,id) {
     this.id = id;
-    lox = Math.floor(30);
-    hix = Math.floor(width-30);
+    lox = Math.floor(myGameArea.canvas.width*.40);
+    hix = Math.floor(myGameArea.canvas.width*.60);
     this.x = getRandomInt(lox,hix);
 
-    loy = Math.floor(30);
-    hiy = Math.floor(height-30);
+    loy = Math.floor(myGameArea.canvas.height*.40);
+    hiy = Math.floor(myGameArea.canvas.height*.60);
     this.y = getRandomInt(loy,hiy);
     this.r = 15;
+    this.color = color;
     this.num_sensors = 3;
-    this.velocity = 4.0;
+    this.velocity = 1.0;
     this.sensor_length = this.r+15
     this.delta_radians = (2.0*Math.PI)*(1.0/12.0)
     this.epxs = [];
@@ -50,6 +38,27 @@ function Rover(id) {
     this.dx = this.velocity * Math.cos(this.angle);
     this.dy = this.velocity * Math.sin(this.angle);
 
+    this.reset_position = function() {
+        lox = Math.floor(myGameArea.canvas.width*.40);
+        hix = Math.floor(myGameArea.canvas.width*.60);
+        this.x = getRandomInt(lox,hix);
+
+        loy = Math.floor(myGameArea.canvas.height*.40);
+        hiy = Math.floor(myGameArea.canvas.height*.60);
+        this.y = getRandomInt(loy,hiy);
+        this.angle = Math.random() * 2.0 * Math.PI;
+        this.velocity = 1.0;
+    }
+
+    this.think = function() {
+        this.angle = brains[this.id].think(this.state);
+        //console.log('rover think state, back angle ',this.state,this.angle);
+
+    }
+   
+   this.wtf = function() {
+       console.log('wtf');
+   } 
     this.move = function() {
         this.dx = this.velocity * Math.cos(this.angle)
         this.dy = this.velocity * Math.sin(this.angle)
@@ -57,11 +66,11 @@ function Rover(id) {
         this.y += this.dy;
     }
 
-    this.draw = function(color) {
+    this.draw = function() {
         ctx = myGameArea.context;
         ctx.beginPath();
         ctx.arc(this.x,this.y,this.r,0,2*Math.PI);
-        ctx.fillStyle = color;
+        ctx.fillStyle = this.color;
         ctx.fill();
         ctx.strokeStyle = '#003300';
         for (s=0;s< this.num_sensors;s++) {
@@ -79,18 +88,9 @@ function Rover(id) {
         ctx.closePath();
      } //end of rover draw 
 
-} //end of Rover function  
 
-function make_rovers(team) {
-    rovers = [];
-    for(var ri = 0;ri<num_rovers;ri++) {
-        team.rovers[ri] = new Rover(ri);
-    }
-}//end of function make_rovers
-
-      
-Rover.prototype.get_sensor_data= function() {
-      this.state = [0,0,0,0,0,0,0,0,0];
+      this.get_sensor_data= function() {
+          this.state = [0,0,0,0,0,0,0,0,0];
       //food
       for (s=0;s<this.num_sensors;s++) {
            this.state[s] = 0
@@ -112,9 +112,9 @@ Rover.prototype.get_sensor_data= function() {
             this.state[3+s] = 1;
          }
          //other rovers !!!
-           for (ix = 0;ix<this.num_rovers;ix++) {
+           for (ix = 0;ix<num_rovers;ix++) {
              if (ix != this.id) {
-               rvr = team.rovers[ix];
+               rvr = rovers[ix];
                dist = Math.hypot((rvr.x-this.epxs[s]),(rvr.y-this.epys[s]));
                test = rvr.r ;
                if (dist <= test) {
@@ -124,68 +124,62 @@ Rover.prototype.get_sensor_data= function() {
            } //end of loop on rovers
 
         } //end of loop on sensors
-      return this.state;
     } //end of get_sensor_data function
 
-Rover.prototype.get_reward = function(rvrs) {
+    this.get_reward = function() {
         //food
-        no_change = true;
         new_reward = 0;
         for (ij = 0;ij<num_foods;ij++) {
            dist = Math.hypot((foods[ij].x-this.x),(foods[ij].y-this.y));
            test = foods[ij].r + this.r;
            //console.log('dist,test',dist,test);
            if (dist <= test) {
-                new_reward += 4;
-                no_change = false;
-                //if (foods[ij].r >= 8) {
-                   //foods[ij].r--;
-                //}
+                new_reward += 15;
+          //      foods[ij].r += -1;
            } //end of if
          } //end of loop on food
 
        //now for borders
        if (this.x > myGameArea.canvas.width-5 || this.x < 5) {
          if( this.velocity > 0.0) {
-           this.reward += -1;
-           no_change = false;
+           this.reward += -10;
            this.velocity = 0.0;
          }
        }
        if (this.y > myGameArea.canvas.height-2 || this.y < 5) {
          if (this.velocity > 0.0) {
-           new_reward+= -1;
-           no_change = false;
+           new_reward+= -10;
            this.velocity = 0.0;
          }
        } //end of if
 
       for (ir = 0;ir<num_rovers;ir++) {
          if (ir != this.id) {
-           dist = Math.hypot((rvrs[ir].x-this.x),(rvrs[ir].y-this.y));
-           test = rvrs[ir].r + this.r;
+           dist = Math.hypot((rovers[ir].x-this.x),(rovers[ir].y-this.y));
+           test = rovers[ir].r + this.r;
            if (dist <= test) {
-                new_reward += -1;
-                no_change = false;
+                new_reward += -2;
            } //end of if on dist test
           } //end of if on not me
        } //end of loop on rovers
 
-       if (no_change === true ) {
+       if (new_reward < 1 ) {
            new_reward = -1;
        }
-       return new_reward;
-} //end of get_reward
+       this.reward = new_reward;
 
      
-Rover.prototype.reset_position = function() {
-        lox = Math.floor(30);
-        hix = Math.floor(width-30);
-        this.x = getRandomInt(lox,hix);
-        loy = Math.floor(30);
-        hiy = Math.floor(height-30);
-        this.y = getRandomInt(loy,hiy);
-        this.angle = Math.random() * 2.0 * Math.PI;
-        this.velocity = 1.0;
+    } //end of reward
+} //end of Rover function  
+
+function make_rovers(color,num_rovers) {
+    console.log('make rovers color,num',color,num_rovers);
+    rovers = [];
+    for(var ri = 0;ri<num_rovers;ri++) {
+        rovers[ri] = new Rover(color,ri);
     }
+    console.log('after make rover 0,id ',rovers[0].id);
+    return rovers;
+    
+}//end of function make_rovers
 

@@ -1,39 +1,21 @@
+function make_genomes(team) {
+    gl = (team.num_inputs * team.num_hidden) + (team.num_hidden * team.num_outputs);
+    for(var irr=0;irr<team.num_rovers;irr++) {
+        team.genomes[irr] = make_genome(irr,gl);
+    }
+} //end of function
 
-function Genome() {
-    gl = (num_inputs * num_hidden) + (num_hidden * num_outputs);
-    genome = []
+function make_genome(i,gl) {
+    genome = {};
+    junk = [];
     for (j = 0;j<gl;j++) {
-        genome[j] = getRandomFloat(-2,2);
-    } //end of loop on j
-    return genome;
-}
-
-function make_genomes(num_rovers) {
-    for(var ii = 0;ii<num_rovers;ii++) {
-        genomes[ii] = new Genome();
-    }
-}//end of function make_genomes
-
-function select_genomes() {
-    //console.log('select gneomes',genomes);
-    var keys = [];
-    new_genomes = [];
-    keys = make_rewards();
-    spot = 2;
-    for(i=0;i<spot;i++) {
-      iz = keys[i];
-      new_genomes[i] = genomes[iz];
-    }
-    //like to fuck sexual reproduction -- just crank up mutation
-    for (kk = spot;kk<num_rovers;kk++) {
-        i1 = getRandomInt(0,5);
-        i2 = getRandomInt(0,5);
-        newbies = [];
-        newbies = crossover(genomes[keys[i1]],genomes[keys[i2]]);
-        new_genomes[kk] = newbies[0];
-    }
-    genomes = new_genomes;
-} //end of select_genomes
+      junk[j] = getRandomFloat(-2,2);
+    } //end of loop for individual genome
+    genome.id = i;
+    genome['score'] = 0;
+    genome['dna_string'] = junk;
+    return genome
+} //end of function make genomes
 
 function crossover(p1,p2) {
         cspot = Math.floor(p1.length/2);
@@ -48,24 +30,6 @@ function crossover(p1,p2) {
         return [c1,c2];
     } //end of crossover
 
-function make_rewards() {
-    var sum = 0.0;
-    var rewards = {};
-    var new_rovers = [];
-    for (var iii = 0;iii<num_rovers;iii++) {
-       rid = rovers[iii].id;
-       rewards[rid] = rovers[iii].reward;
-       sum += rovers[iii].reward;
-       rovers[iii].reward = 0;
-    } //end of loop on num_rovers
-    console.log("SUM REWARDS: ",sum);
-
-    skeys = getSortedKeys(rewards);
-    //console.log("rewards: ",rewards," skeys ; ",skeys);
-    
-    return skeys;
-} //end of function
-
 function getSortedKeys(obj) {
         var keys = []; for(var key in obj) keys.push(key);
         return keys.sort(function(a,b){return obj[b]-obj[a]});
@@ -73,14 +37,58 @@ function getSortedKeys(obj) {
 
 
 function mutate_genomes() {
- 
-     gl = genomes[0].length;
-     for(var ik=2;ik<num_rovers;ik++) {
-         spot = getRandomInt(0,gl);
+     //skip very best ... if i did the select right
+     for(var ik=2;ik<this.num_rovers;ik++) {
+         spot = getRandomInt(0,this.gl);
          new_weight = getRandomFloat(-2,2);
-         //g = genomes[ik];
-         genomes[ik][spot] = new_weight;
-         //genomes[i] = genome;
+         this.genomes[ik][spot] = new_weight;
      } //end of loop on new_rovers
 } //end of function
+
+function select_genomes(team) {
+    //this is always a pain.
+    genomes = team.genomes;
+    var keys = [];
+    new_dna_strings = [];
+    keys = make_rewards(genomes);
+    spot = 2;
+    for(i=0;i<spot;i++) {
+      iz = keys[i];
+      genomes[i] = genomes[iz];
+      genomes[i].score = 0;
+    }
+    //like to forget about sexual reproduction -- just crank up mutation
+    //but alas !
+
+    for (kk = spot;kk<num_rovers;kk++) {
+        i1 = getRandomInt(0,5);
+        i2 = getRandomInt(0,5);
+        newbies = [];
+        newbies = crossover(genomes[keys[i1]].dna_string,genomes[keys[i2]].dna_string);
+        new_dna_strings[kk] = newbies[0];
+    }
+    for (kk = spot;kk<num_rovers;kk++) {
+        genomes[kk].dna_string  = new_dna_strings[kk];
+        genomes[kk].score = 0;
+    }
+    team.genomes = genomes;
+} //end of select_genomes
+
+function make_rewards(genomes) {
+    //set up a hash, sort it to get the new genome rankings
+    var sum = 0.0;
+    var rewards = {};
+    for (var irw = 0;irw< num_rovers;irw++) {
+       rewards[irw] = genomes[irw].reward;
+       sum += genomes[irw].reward;
+       genomes[irw].reward = 0;
+    } //end of loop on num_rovers
+  //console.log('rewards; ',rewards);
+    console.log("team -- SUM REWARDS: ",sum);
+    skeys = getSortedKeys(rewards);
+   // console.log('KEYS,REWARDS ',skeys,rewards);
+    return skeys;
+} //end of function
+
+
 

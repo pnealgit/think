@@ -10,12 +10,11 @@ canvas {
 </style>
 <script>
 var num_inputs = 9;
-var red_num_hidden = 18;
-var blue_num_hidden = 18;
+var num_hidden = 18;
 var num_outputs = 1;
 var width = 480;
 var height = 300;
-var num_rovers = 10;
+var num_rovers = 20;
 
 function getRandomInt(min,max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
@@ -43,28 +42,13 @@ var num_foods = 40;
 rovers = [];
 genomes = [];
 brains = [];
-red_team = {};
-blue_team = {};
 
 function startGame() {
      pause = false;
-     red_team = new Team('red',num_rovers,num_inputs,red_num_hidden,num_outputs);
-     blue_team = new Team('blue',num_rovers,num_inputs,blue_num_hidden,num_outputs);
-
-     make_genomes(red_team);
-     make_genomes(blue_team);
-
+     make_genomes(num_rovers);
      make_foods(num_foods);
-     reset_food_positions();
-
-     make_brains(red_team);
-     make_brains(blue_team);
-
-
-     make_rovers(red_team);
-     make_rovers(blue_team);
-
-
+     make_brains(num_rovers);
+     make_rovers(num_rovers);
      myGameArea.start();
 }
 
@@ -72,6 +56,7 @@ var myGameArea = {
     canvas : document.createElement("canvas"),
     start : function() {
         var millis = 50;  //game intervale milliseconds
+        console.log('gamearea genomes ',genomes);
         this.canvas.width = width;
         this.canvas.height = height;
         this.context = this.canvas.getContext("2d");
@@ -90,29 +75,24 @@ var myGameArea = {
     }
 }
 function updateGameArea() {
+    //if (pause) {
+     //  return;
+    //}
+    //console.log('episode_knt: ',episode_knt);
 
-    if (episode_knt >=  250) {
+    if (episode_knt >=  400) {
        console.log("NEW EPISODE !!");
        episode_knt = 0;
-       //console.log('red team genomes are ',red_team['genomes']);
-       select_genomes(red_team);
-       select_genomes(blue_team);
-
-       mutate_genomes(red_team);
-       mutate_genomes(blue_team);
-       make_new_weights(red_team);
-       make_new_weights(blue_team);
-       
-       reset_rover_positions(red_team);
-       reset_rover_positions(blue_team);
+       select_genomes();
+       mutate_genomes();
+       make_new_weights();
+       reset_rover_positions();
        reset_food_positions();
     } //end of if on episode_knt
     myGameArea.clear();
-    update_rovers(red_team);
-    update_rovers(blue_team);
+    update_rovers();
     update_foods();
     episode_knt+= 1;
-
 } //end of updateGameArea
 </script>
 </head>

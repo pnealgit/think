@@ -1,0 +1,12 @@
+    this.reset_position = function() {
+        lox = Math.floor(myGameArea.canvas.width*.40);
+        hix = Math.floor(myGameArea.canvas.width*.60);
+        this.x = getRandomInt(lox,hix);
+
+        loy = Math.floor(myGameArea.canvas.height*.40);
+        hiy = Math.floor(myGameArea.canvas.height*.60);
+        this.y = getRandomInt(loy,hiy);
+        this.angle = Math.random() * 2.0 * Math.PI;
+        this.velocity = 1.0;
+    }
+

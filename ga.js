@@ -50,7 +50,7 @@ function select_genomes(team) {
     genomes = team.genomes;
     var keys = [];
     new_dna_strings = [];
-    keys = make_rewards(genomes);
+    keys = make_rewards(genomes,team.color);
     spot = 2;
     for(i=0;i<spot;i++) {
       iz = keys[i];
@@ -74,7 +74,7 @@ function select_genomes(team) {
     team.genomes = genomes;
 } //end of select_genomes
 
-function make_rewards(genomes) {
+function make_rewards(genomes,color) {
     //set up a hash, sort it to get the new genome rankings
     var sum = 0.0;
     var rewards = {};
@@ -83,10 +83,9 @@ function make_rewards(genomes) {
        sum += genomes[irw].reward;
        genomes[irw].reward = 0;
     } //end of loop on num_rovers
-  //console.log('rewards; ',rewards);
-    console.log("team -- SUM REWARDS: ",sum);
+    data = "SUM REWARDS;" + color+'_team ' + sum;
+    senddata(data);
     skeys = getSortedKeys(rewards);
-   // console.log('KEYS,REWARDS ',skeys,rewards);
     return skeys;
 } //end of function
 

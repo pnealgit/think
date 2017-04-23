@@ -6,7 +6,11 @@
 canvas {
     border:5px solid #000000;
     background-color: #ffffff;
+    padding: 0;
+    margin: auto;
+    display: block;
 }
+
 </style>
 <script>
 var num_inputs = 9;
@@ -27,7 +31,6 @@ function getRandomFloat(min,max) {
 </script>
 <script src='ga.js'></script>
 <script src='nn.js'></script>
-
 
 <script src='rover.js'></script>
 
@@ -76,6 +79,7 @@ var myGameArea = {
         this.canvas.height = height;
         this.context = this.canvas.getContext("2d");
         document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+
         this.interval = setInterval(updateGameArea, millis);
     },
     stop : function() {
@@ -91,10 +95,9 @@ var myGameArea = {
 }
 function updateGameArea() {
 
-    if (episode_knt >=  250) {
-       console.log("NEW EPISODE !!");
+    if (episode_knt >=  150) {
+       senddata('NEW EPISODE');
        episode_knt = 0;
-       //console.log('red team genomes are ',red_team['genomes']);
        select_genomes(red_team);
        select_genomes(blue_team);
 
@@ -114,34 +117,21 @@ function updateGameArea() {
     episode_knt+= 1;
 
 } //end of updateGameArea
+
+function senddata(data) {
+         document.getElementById('comms').innerHTML += data + "<br>";
+}
 </script>
 </head>
 <body onload="startGame()">
 <center>
 <button onclick="javascript:myGameArea.stop()">stop</button>
 <button onclick="javascript:myGameArea.start()">start</button>
+<p>
+<div id = 'comms' align='left' style="height:120px;width:400px;border:1px solid #ccc; font:12px/16px
+Georgia,Garamond,Serif;overflow:auto;">
+</div>
 </center>
-<p>
-Open up your javascript console to get info.
-<p>
-I run it on Chrome.
-<p>
-Server.go is a simple go web server.<br>
-Use whatever web server you want.
-<p>
-Let it run for a few hours. Eventually the red things<br>
-won't go to the wall...At least not too much. And the 'SUM REWARDS'<br>
-in the console window should slowly increase
-<p>
-Essentially this is a genetic algorithm that supplies the<br>
-weights to a 3 layer neural net (input,hidden,output). <br>
-The neural net is only feed-forward. No back propagation.<br>
-The output layer of the neural net hopefully gives a result from 0 to 1.<br>
-This is then multiplied by 2*PI to get a direction angle in radians<br>
-<p>
-Everything is inside the browser. Next I will try to put the<br>
-GA and the NN in a separate process and communicate via websockets.<br>
-If it isn't too slow.<br>
 
 </body>
 </html>
